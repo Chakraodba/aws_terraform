@@ -2,4 +2,4 @@
 .terraform/*
 *.log
 *lock*
-
+*state*
