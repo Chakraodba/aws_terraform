@@ -2,20 +2,28 @@ provider "aws" {
   region     = "ap-south-1"
 }
 
+variable "aws_vpc_cidr" {
+  type = list(object({
+    cidr_block = string,
+    name = string
+}))
+}
+variable "tag_name" {}
+
 resource "aws_vpc" "myvpc" {
-    cidr_block = "10.0.0.0/16"
+    cidr_block = var.aws_vpc_cidr[0].cidr_block
     tags = {
-      "Name" = "Terra-vpc"
+      "Name" = var.aws_vpc_cidr[0].name
     }
   
 }
 
 resource "aws_subnet" "myvpc-subnet-public" {
     vpc_id = aws_vpc.myvpc.id
-    cidr_block = "10.0.1.0/24"
+    cidr_block = var.aws_vpc_cidr[0].cidr_block
     availability_zone = "ap-south-1a"
     tags = {
-      "Name" = "terra-vpc-sub-pub"
+      "Name" = var.aws_vpc_cidr[0].name
     }
   
 }
