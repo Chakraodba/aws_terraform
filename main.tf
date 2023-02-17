@@ -11,7 +11,7 @@ variable "avail_zone" {}
 resource "aws_vpc" "myvpc" {
     cidr_block = var.aws_vpc_cidr
     tags = {
-      "Name" = "{var.env}-vpc"
+      "Name" = "${var.env}-vpc"
     }
   
 }
@@ -21,7 +21,7 @@ resource "aws_subnet" "myvpc-subnet-public" {
     cidr_block = var.aws_vpc_subnet_cidr
     availability_zone = var.avail_zone
     tags = {
-      "Name" = "{var.env}-subnet"
+      "Name" = "${var.env}-subnet"
     }
   
 }
