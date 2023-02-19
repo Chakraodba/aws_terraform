@@ -2,15 +2,6 @@ provider "aws" {
   region     = "ap-south-1"
 }
 
-variable "aws_vpc_cidr" {}
-variable "aws_vpc_subnet_cidr" {}
-variable "env" {}
-variable "avail_zone" {}
-variable "my_ip" {}
-variable "instance_type" {}
-variable "data" {}
-
-
 resource "aws_vpc" "myvpc" {
     cidr_block = var.aws_vpc_cidr
     tags = {
@@ -19,43 +10,14 @@ resource "aws_vpc" "myvpc" {
   
 }
 
-resource "aws_subnet" "myvpc-subnet-public" {
-    vpc_id = aws_vpc.myvpc.id
-    cidr_block = var.aws_vpc_subnet_cidr
-    availability_zone = var.avail_zone
-    tags = {
-      "Name" = "${var.env}-subnet"
-    }
+module "myapp-subnet" {
+  source = "./modules/subnets"
+  aws_vpc_subnet_cidr = var.aws_vpc_subnet_cidr
+  myvpc_id = aws_vpc.myvpc.id
+  env = var.env
+  avail_zone = var.avail_zone
   
 }
-
-
-resource "aws_route_table" "myroute" {
-  vpc_id = aws_vpc.myvpc.id
-  route  {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.myigw.id
-  }
-  tags = {
-    "Name" = "${var.env}-route"
-  }
-  
-}
-
-resource "aws_internet_gateway" "myigw" {
-  vpc_id = aws_vpc.myvpc.id
-  tags = {
-    "Name" = "${var.env}-igw"
-  }
-}
-
-
-resource "aws_route_table_association" "rt_associate" {
-  subnet_id = aws_subnet.myvpc-subnet-public.id
-  route_table_id = aws_route_table.myroute.id
-  #replace = true
-}
-
 /*
 resource "aws_default_route_table" "default_rt_table" {
   default_route_table_id = aws_vpc.myvpc.default_route_table_id
@@ -132,7 +94,7 @@ data "aws_ami" "example" {
 resource "aws_instance" "my_vm" {
   ami = data.aws_ami.example.id
   instance_type = var.instance_type
-  subnet_id = aws_subnet.myvpc-subnet-public.id
+  subnet_id = module.myapp-subnet.subnet.id 
   vpc_security_group_ids = [aws_security_group.chakra-sg.id]
   availability_zone = var.avail_zone
   associate_public_ip_address = true
@@ -142,12 +104,4 @@ resource "aws_instance" "my_vm" {
   tags = {
     "Name" = "${var.env}-firstVM"
   }
-}
-
-output "aws_vpc_id" {
-  value = aws_vpc.myvpc.id
-}
-
-output "pub_ip" {
-  value = aws_instance.my_vm.public_ip
 }
